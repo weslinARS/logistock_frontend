@@ -1,8 +1,9 @@
 'use client';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaArrowLeft, FaArrowRight, FaExclamation } from 'react-icons/fa';
-import { useNavigate } from 'react-router';
+import { useFetcher, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '~/components/ui/button';
@@ -23,8 +24,7 @@ import {
 } from '~/components/ui/form';
 import { Input } from '~/components/ui/input';
 import { useAuth } from '~/hooks/useAuth.hook';
-import { HttpStatus, type ApiError } from '~/lib/types/api.type';
-import AuthService from '~/services/auth.service';
+import type { action } from '../login';
 const formSchema = z.object({
   email: z.email({
     error: 'Correo electrónico inválido',
@@ -40,35 +40,12 @@ const formSchema = z.object({
 
 export default function LoginForm() {
   const navigate = useNavigate();
-  const { logIn, getUserRootRoute, isAuthenticated } = useAuth();
+  const fetcher = useFetcher<typeof action>();
+  const { getUserRootRoute, isAuthenticated } = useAuth();
   async function handleSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const response = await AuthService.signIn(values);
-      if (response.statusCode === HttpStatus.OK && response.data) {
-        logIn(response.data);
-        toast('Inicio de sesión exitoso', {
-          description: 'Bienvenido a LogiStock',
-          closeButton: true,
-          position: 'top-center',
-          duration: 5000,
-        });
-        const rootRoute = getUserRootRoute();
-        navigate(`${rootRoute}/dashboard`, {
-          replace: true,
-        });
-      }
-    } catch (error: any) {
-      console.debug('Error al iniciar sesión:', error);
-      const e = error as ApiError;
-      toast('Error Al iniciar sesión', {
-        description: e?.message || 'Error desconocido',
-        closeButton: true,
-        icon: <FaExclamation />,
-        id: 'login-error',
-        duration: 5000,
-        position: 'top-center',
-      });
-    }
+    fetcher.submit(values, {
+      method: 'POST',
+    });
   }
   function goBack() {
     navigate('/', {
@@ -85,6 +62,22 @@ export default function LoginForm() {
     mode: 'onBlur',
   });
 
+  useEffect(() => {
+    console.debug('LoginForm useEffect', fetcher.data);
+    const serverErrors = fetcher.data?.errorMessage;
+    if (fetcher.state === 'idle' && fetcher.data?.errorMessage) {
+      toast('Error al iniciar sesión', {
+        description: serverErrors,
+        icon: <FaExclamation />,
+        position: 'top-center',
+        closeButton: true,
+        duration: 5000,
+        id: 'login-error',
+      });
+    }
+  }, [fetcher.data, form.setError]);
+
+  const isSubmitting = fetcher.state !== 'idle';
   return (
     <Card className="min-w-[300px]">
       <CardHeader>
@@ -98,7 +91,8 @@ export default function LoginForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form
+          <fetcher.Form
+            method="POST"
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col gap-4"
           >
@@ -109,7 +103,11 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Correo Electrónico</FormLabel>
                   <FormControl>
-                    <Input placeholder="use@ejemplo.com" {...field} />
+                    <Input
+                      autoComplete="email"
+                      placeholder="use@ejemplo.com"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage content={form.formState.errors.email?.message} />
                 </FormItem>
@@ -122,7 +120,12 @@ export default function LoginForm() {
                 <FormItem>
                   <FormLabel>Contraseña</FormLabel>
                   <FormControl>
-                    <Input placeholder="********" type="password" {...field} />
+                    <Input
+                      autoComplete="current-password"
+                      placeholder="********"
+                      type="password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage
                     content={form.formState.errors.password?.message}
@@ -135,12 +138,10 @@ export default function LoginForm() {
                 className="hover:cursor-pointer"
                 type="submit"
                 color="primary"
-                disabled={
-                  form.formState.isSubmitting || !form.formState.isValid
-                }
+                disabled={isSubmitting || !form.formState.isValid}
               >
                 <FaArrowRight />
-                Iniciar Sesión
+                {isSubmitting ? 'Iniciando sesión...' : 'Iniciar Sesión'}
               </Button>
               <Button
                 onClick={goBack}
@@ -152,7 +153,7 @@ export default function LoginForm() {
                 Volver Atrás
               </Button>
             </div>
-          </form>
+          </fetcher.Form>
         </Form>
       </CardContent>
     </Card>

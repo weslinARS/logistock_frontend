@@ -1,5 +1,5 @@
 import { ChevronUp } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { FaHome, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import { useAuth } from '~/hooks/useAuth.hook';
@@ -26,21 +26,17 @@ import {
 export default function AppSideBar() {
   const { logOut, userProfile } = useAuth();
   const navigate = useNavigate();
-  const [Links, setLinks] = useState<RouteLink[]>([]);
+  const Links = useMemo(() => {
+    if (!userProfile) return [];
+    const userRole = userProfile.role;
+    const roleLinks = routeLinks.find((roleLink) => roleLink.role === userRole);
+    return roleLinks ? roleLinks.links : [];
+  }, [userProfile]);
 
   function handleLogOut() {
     logOut();
-    navigate('/login', { replace: true });
   }
-  useEffect(() => {
-    console.log(userProfile);
-    const userRole = userProfile?.user.role;
-    console.log('User Role:', userRole);
-    const roleLinks = routeLinks.find((roleLink) => roleLink.role === userRole);
-    if (roleLinks) {
-      setLinks(roleLinks.links);
-    }
-  }, []);
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -75,12 +71,15 @@ export default function AppSideBar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size={'lg'}>
-                  <div>
-                    <span className="bg-neutral-800 font-black text-secondary w-32 p-2 rounded-lg">
-                      {userProfile?.user.firstName[0].toUpperCase()}
-                      {userProfile?.user.lastName[0].toUpperCase()}
+                  <div className="flex flex-row gap-4 items-center">
+                    <span className="bg-neutral-800 font-black text-secondary  p-2 rounded-lg w-fit">
+                      {userProfile.firstName[0]}
+                      {userProfile.lastName[0]}
                     </span>
-                    <span className="ml-2">{`${userProfile?.user.firstName} ${userProfile?.user.lastName}`}</span>
+
+                    <span>
+                      {userProfile.firstName} {userProfile.lastName}
+                    </span>
                   </div>
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
@@ -89,14 +88,18 @@ export default function AppSideBar() {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem>
-                  <span>Account</span>
+                <DropdownMenuItem
+                  asChild
+                  className="hover:cursor-pointer w-full"
+                >
+                  <span>Cuenta</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="hover:cursor-pointer"
+                  className="hover:cursor-pointer w-full"
+                  asChild
                   onClick={() => handleLogOut()}
                 >
-                  <span>Sign out</span>
+                  <span>Salir </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

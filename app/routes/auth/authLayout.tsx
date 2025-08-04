@@ -1,27 +1,29 @@
-import { useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, redirect, useLoaderData } from 'react-router';
 import AppSideBar from '~/components/AppSideBar/Index';
 import { SidebarProvider, SidebarTrigger } from '~/components/ui/sidebar';
-import { useAuth } from '~/hooks/useAuth.hook';
+import { getUserFromSession } from '~/services/session.server';
 
+export async function loader({ request }: { request: Request }) {
+  const user = await getUserFromSession(request);
+
+  if (!user) throw redirect('/login');
+
+  return {
+    user,
+  };
+}
 export default function AuthLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useLoaderData<typeof loader>();
 
-  useEffect(() => {
-    if (isLoading) return;
-    if (!isAuthenticated) {
-      console.debug('User not authenticated, redirecting to login');
-      navigate('/login', { replace: true });
-    }
-  }, [isLoading, isAuthenticated, navigate]);
   return (
     <div>
       <SidebarProvider>
         <AppSideBar />
         <main>
           <SidebarTrigger className="hover:cursor-pointer" />
-          <Outlet />
+          <main className="p-4">
+            <Outlet />
+          </main>
         </main>
       </SidebarProvider>
     </div>

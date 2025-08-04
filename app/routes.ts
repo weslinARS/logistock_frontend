@@ -9,6 +9,7 @@ import {
 export default [
   index('routes/home/home.tsx'),
   route('login', 'routes/login/login.tsx'),
+  route('logout', 'routes/logout.tsx'),
   layout('routes/auth/authLayout.tsx', [
     ...prefix('admin', [
       route('dashboard', 'routes/auth/admin/dashboard/Index.tsx'),

@@ -1,7 +1,7 @@
 // URL
 
-import axiosInstance from '~/lib/axiosIntances';
-import type { ApiResponse } from '~/lib/types/api.type';
+import { axiosPublicInstance } from '~/lib/axiosIntances';
+import { type ApiResponse } from '~/lib/types/api.type';
 import type { User } from '~/lib/types/entities.type';
 
 const resource = 'auth';
@@ -25,7 +25,7 @@ export type SignedUserDto = {
 // Service Methods
 
 const signIn = async (data: SignInDto): Promise<ApiResponse<SignedUserDto>> =>
-  axiosInstance.post(urlFactory.signIn(), data);
+  axiosPublicInstance.post(urlFactory.signIn(), data);
 
 const AuthService = {
   signIn,
