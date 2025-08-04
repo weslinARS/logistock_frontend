@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { tv, type VariantProps } from 'tailwind-variants';
 
 const titleStyle = tv({
-  base: 'font-black capitalize',
+  base: 'font-black capitalize inline-flex items-center',
   variants: {
     size: {
       main: 'text-6xl',

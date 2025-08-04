@@ -110,30 +110,4 @@ export default function AppSideBar() {
   );
 }
 
-export type RouteLink = {
-  label: string;
-  icon: React.ReactNode;
-  path: string;
-};
 
-export type RoleLink = {
-  role: UserRole;
-  links: RouteLink[];
-};
-export const routeLinks: RoleLink[] = [
-  {
-    role: 'admin',
-    links: [
-      {
-        label: 'Dashboard',
-        icon: <FaHome />,
-        path: '/admin/dashboard',
-      },
-      {
-        label: 'Usuarios',
-        icon: <FaUser />,
-        path: '/admin/users',
-      },
-    ],
-  },
-];
